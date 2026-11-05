@@ -105,7 +105,7 @@ MIT，见 [LICENSE](plugins/dsh-quick-compact/LICENSE)。
 
 **A tiny ring in your DSH composer: see your context, compact with one click.**
 
-A client-side plugin for DeepSeek Harness that adds a ring gauge next to the built-in context meter. It shows context usage, breaks it down by system prompt / tool definitions / conversation, and runs the official `/compact` command when you click. No network calls, no telemetry, no UI replacement.
+A client-side plugin for DeepSeek Harness that adds a ring gauge next to the built-in context meter. It shows context usage, breaks it down by system prompt / tool definitions / conversation, and runs the official `/compact` command when you click. No telemetry and nothing sent to third parties; the only requests are same-origin calls to the optional threshold endpoint. No UI replacement.
 
 ![Demo](plugins/dsh-quick-compact/docs/demo.gif)
 
