@@ -2,7 +2,7 @@
 
 **每次压缩都要手打 `/compact`？点一下就行了。**
 
-DSH（DeepSeek Harness）输入框工具栏里的一枚小环：显示上下文用量，点开看构成，再点一下执行官方 `/compact`。纯客户端插件，不替换官方 UI，不联网，不发数据。
+DSH（DeepSeek Harness）输入框工具栏里的一枚小环：显示上下文用量，点开看构成，再点一下执行官方 `/compact`。纯客户端插件，不替换官方 UI，无遥测、不向第三方上报；唯一的同源请求是「压缩阈值」联动接口（未安装联动插件时自动隐藏）。
 
 ![演示：点开面板 → 一键压缩 → 压缩烟花](plugins/dsh-quick-compact/docs/demo.gif)
 
@@ -61,11 +61,12 @@ dsh plugin --profile <profile> add dsh-quick-compact
 - 动作：`remote.commands.execute(sessionId, '/compact', [])`，与手打命令等价；
 - 降级：以上任一不可用时，退化成「只有压缩图标 + 点击面板」，不报错、不显示假数据。
 
-### 隐私
+### 隐私与请求范围
 
-- 插件只在本地读宿主的上下文统计，**不发任何网络请求**；
-- 不读取对话内容、不写日志、不上报；
-- 唯一的「动作」是替你在本机执行官方 `/compact`。
+- **不向第三方上报、不发遥测**，不读取对话内容、不写日志。
+- 打开面板时会尝试 `GET` 一次当前宿主**同源**的阈值接口 `/compaction-threshold/api/state`（用于显示「压缩触发阈值」滑块）；未安装联动插件时请求失败、控件自动隐藏。
+- 拖动滑块会 `POST` 同一个同源接口，只写 `thresholdRatio` 一个字段。
+- 压缩本身通过宿主官方命令通道执行，后续压缩行为由宿主配置决定。
 
 ### 兼容
 
@@ -128,7 +129,7 @@ dsh plugin --profile <profile> add dsh-quick-compact
 
 ### Compatibility & privacy
 
-DSH 0.2.x (desktop / web). Client-side only: no network requests, no conversation content read, no telemetry — it just runs the official compact command locally.
+DSH 0.2.x (desktop / web). Client-side only: no telemetry, nothing sent to third parties, no conversation content read. The only requests are same-origin calls to the optional `/compaction-threshold/api/state` endpoint (hidden when that plugin is absent).
 
 ### Repo layout
 
