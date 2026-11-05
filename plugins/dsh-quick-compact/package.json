@@ -1,0 +1,53 @@
+{
+  "name": "dsh-quick-compact",
+  "version": "1.5.0",
+  "private": false,
+  "description": "Compact gauge for DeepSeek Harness: an 18px ring + tabular percentage in the composer toolbar that opens a usage breakdown and runs /compact.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": false,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "compact",
+    "context",
+    "context-meter",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FrontierMindLab/dsh-quick-compact.git"
+  },
+  "author": "FrontierMindLab",
+  "homepage": "https://github.com/FrontierMindLab/dsh-quick-compact#readme",
+  "bugs": {
+    "url": "https://github.com/FrontierMindLab/dsh-quick-compact/issues"
+  }
+}

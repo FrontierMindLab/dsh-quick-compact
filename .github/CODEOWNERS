@@ -1,0 +1,6 @@
+# 仓库分区归属（两个维护方共用同一个 GitHub 账号 FrontierMindLab：
+# 账号层面区分不了，靠目录分区 + PR review 纪律区分）
+/plugins/       @FrontierMindLab
+/experiments/   @FrontierMindLab
+/.github/       @FrontierMindLab
+/scripts/       @FrontierMindLab

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Context gauge + one-click compact",
+    "description": "A circular ring in the composer toolbar shows how much of the context window is used; click it for the breakdown, then click /compact to compact."
+  }
+}

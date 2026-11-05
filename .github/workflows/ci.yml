@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check (plugin client)
+        run: node --check plugins/dsh-quick-compact/client.js
+      - name: package.json sanity
+        run: node -e "const p=require('./plugins/dsh-quick-compact/package.json'); if(!p.name||!p.version) {console.error('bad package.json'); process.exit(1)}; console.log(p.name, p.version)"
+      - name: No absolute home paths in tracked files
+        run: |
+          if git grep -nE '/(Users|home)/[a-z0-9_-]+' -- . ':!*.png' ; then
+            echo "absolute path found"; exit 1
+          fi
