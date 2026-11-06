@@ -4,13 +4,25 @@
 
 每次压缩都要手打 `/compact`？在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）输入框工具栏里点一下小环就行。
 
-![演示](docs/demo.gif)
-
-![它在输入框工具栏里](docs/location.gif)
+**小环形态：输入框工具栏里的一枚小环**
 
 <p align="center">
-  <img src="docs/panel.png" alt="面板：大环 + 用量构成 + /compact 行" width="720">
+  <img src="docs/location.gif" alt="小环在输入框工具栏里的位置" width="720">
 </p>
+
+**卡片形态：点开就是面板**
+
+<p align="center">
+  <img src="docs/panel.png" alt="面板示意：大环 + 用量构成 + /compact 行" width="720">
+</p>
+
+**点一下的样子**
+
+<p align="center">
+  <img src="docs/demo.gif" alt="演示：点开面板 → 一键压缩 → 压缩烟花" width="720">
+</p>
+
+GIF 是示意：插件里的压缩烟花更细腻，动画约 2.2 秒，而且是整页放，不打开面板也会放。
 
 <p align="center">
   <img src="docs/fireworks.gif" alt="压缩成功后的烟花" width="720">
@@ -29,7 +41,7 @@ DSH 输入框右下角本来就有一只官方上下文环，但它只显示数�
 - **用量小环**：读宿主的 `contextPressure` 投影（已用 ÷ 路由容量），显示整数百分比；环随用量填满，高压时自动变色（青柠 → 橙 → 红）。
 - **点开面板**：大号环 + `上下文已用 N%` + `≈ 148k / 1.0M`，下面是 `contextBreakdown` 投影给出的构成条：系统提示 / 工具定义 / 对话内容，各自 token 数。
 - **执行压缩**：点 `/compact 压缩上下文` → 调命令通道 `remote.commands.execute(sessionId, '/compact', [])`，与手打命令等价；失败把宿主返回的错误原样显示。
-- **压缩烟花**（v1.4.0+）：压缩成功那一刻，环心炸开一簇小方点 + 一圈冲击波，1.4 秒散尽；铺在整个页面上，**不打开面板也放**（自动压缩同样触发）；`pointer-events:none`，不挡输入。`prefers-reduced-motion` 时不放。
+- **压缩烟花**（v1.4.0+）：压缩发生那一刻，环心炸开一簇小方点 + 一圈冲击波，约 2.2 秒散尽；铺在整个页面上，**不打开面板也放**（插件按钮调用未明确失败时播放；上下文用量一次下降 15 个百分点以上也会触发）；`pointer-events:none`，不挡输入。`prefers-reduced-motion` 时不放。
 - **不替换官方 UI**：官方那只环原样保留，插件只在自己的插槽里画，零侵入。
 
 ### 安装
@@ -59,12 +71,14 @@ MIT，见 [LICENSE](LICENSE)。
 
 A tiny ring gauge in the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) composer toolbar: see how full your context is, open a breakdown, and compact with one click.
 
+The GIFs above are illustrative — see the Fireworks bullet for the real behavior and triggers.
+
 ### What it does
 
 - **Ring gauge**: reads the host's `contextPressure` projection, shows an integer percentage, fills as the context grows, and shifts color under pressure (lime → amber → red).
 - **Popover**: big ring + `context used N%` + `≈ 148k / 1.0M`, plus a breakdown of system prompt / tool definitions / conversation with token counts from `contextBreakdown`.
 - **One-click compact**: clicking `/compact` runs the official command channel (`remote.commands.execute(sessionId, '/compact', [])`) — identical to typing it yourself.
-- **Fireworks**: on a successful compact, a small burst of particles and a shockwave ring play for 1.4s on a `pointer-events:none` canvas overlay (skipped under `prefers-reduced-motion`).
+- **Fireworks**: on a compact, a small burst of particles and a shockwave ring play for about 2.2s on a `pointer-events:none` canvas overlay — with or without the panel open (when the plugin's `/compact` call does not explicitly fail, and when context usage drops by ≥15 percentage points); skipped under `prefers-reduced-motion`.
 - **Non-invasive**: the built-in context meter stays untouched; the plugin renders in its own slot.
 
 ### Install

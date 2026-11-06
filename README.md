@@ -4,8 +4,6 @@
 
 DSH（DeepSeek Harness）输入框工具栏里的一枚小环：显示上下文用量，点开看构成，再点一下执行官方 `/compact`。纯客户端插件，不替换官方 UI，无遥测、不向第三方上报；唯一的同源请求是「压缩阈值」联动接口（未安装联动插件时自动隐藏）。
 
-![演示：点开面板 → 一键压缩 → 压缩烟花](plugins/dsh-quick-compact/docs/demo.gif)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-AEF000?labelColor=101619)](plugins/dsh-quick-compact/LICENSE)
 ![DSH](https://img.shields.io/badge/DSH-0.2.x-AEF000?labelColor=101619)
 ![Client plugin](https://img.shields.io/badge/client--side-no%20telemetry-AEF000?labelColor=101619)
@@ -16,11 +14,25 @@ DSH（DeepSeek Harness）输入框工具栏里的一枚小环：显示上下文�
 
 ## 中文
 
-### 它在哪儿
+### 两种形态
 
-![它在输入框工具栏里](plugins/dsh-quick-compact/docs/location.gif)
+**小环形态：输入框工具栏里的一枚小环**
+
+![小环：输入框工具栏里，打完字那行的右侧、额度信息左边](plugins/dsh-quick-compact/docs/location.gif)
 
 DSH 的输入框下面有一行工具栏（`＋`、权限、额度、模型、麦克风、发送）。插件的小环就长在这一行——**打完字那一行的右侧、额度信息左边**。它不抢官方的位置，只在旁边多一枚更小的环。
+
+**卡片形态：点开就是面板**
+
+![面板示意：大环 + 用量构成 + 一键 /compact](plugins/dsh-quick-compact/docs/panel.png)
+
+点一下小环，展开面板：大环 + `上下文已用 N%` + 三段构成（系统提示 / 工具定义 / 对话内容），最下面是 `/compact 压缩上下文` 一行。看用量、看构成、点一下压缩，都在这里。
+
+### 点一下的样子
+
+![演示：点开面板 → 一键压缩 → 压缩烟花](plugins/dsh-quick-compact/docs/demo.gif)
+
+GIF 是示意：插件里的压缩烟花更细腻，动画约 2.2 秒，而且**整页放**——不打开面板也会放。
 
 ### 为什么做它
 
@@ -35,12 +47,10 @@ DSH 本来就有上下文环，但它只告诉你「用了多少」；想压缩�
 | **用量小环** | 18px 环 + 整数百分比，读宿主 `contextPressure` 投影（已用 ÷ 路由容量）。填充随用量增长，高压自动变色：青柠 → 橙 → 红。数据没出来时不显示假数字。 |
 | **用量构成** | 点开面板：大环 + `上下文已用 N%` + `≈ 148k / 1.0M`，下面是 `contextBreakdown` 给出的三段构成：系统提示 / 工具定义 / 对话内容，各自 token 数。 |
 | **一键压缩** | 面板里 `/compact 压缩上下文` 一行，点击调命令通道 `remote.commands.execute(sessionId, '/compact', [])`——和手打命令完全等价，不是自己实现的假压缩。失败会把宿主返回的错误原样显示。 |
-| **压缩烟花** | 压缩成功那一刻，环心炸开一簇小方点 + 一圈冲击波，1.4 秒散尽。它铺在**整个页面**上——不打开面板也会放；手动点 `/compact` 跟命令返回触发，自动压缩（阈值触发）也会放。`pointer-events:none` 不挡输入、不吃点击；`prefers-reduced-motion` 时不放。 |
+| **压缩烟花** | 压缩发生那一刻，环心炸开一簇小方点 + 一圈冲击波，约 2.2 秒散尽。它铺在**整个页面**上（全屏画布）——不打开面板也会放：插件按钮的 `/compact` 调用返回未明确失败时播放；上下文用量一次下降 15 个百分点以上时也会触发（自动压缩通常满足）。`pointer-events:none` 不挡输入、不吃点击；`prefers-reduced-motion` 时不放。 |
 | **零侵入** | 官方那只环原样保留，插件只在自己的插槽里画；不接管官方 UI，升级不易碎。 |
 
-### 界面
-
-![面板：大环 + 用量构成 + /compact 行](plugins/dsh-quick-compact/docs/panel.png)
+### 压缩烟花
 
 | 压缩烟花：不用打开面板，界面里直接放 |
 | --- |
@@ -99,18 +109,32 @@ MIT，见 [LICENSE](plugins/dsh-quick-compact/LICENSE)。
 
 A client-side plugin for DeepSeek Harness that adds a ring gauge next to the built-in context meter. It shows context usage, breaks it down by system prompt / tool definitions / conversation, and runs the official `/compact` command when you click. No telemetry and nothing sent to third parties; the only requests are same-origin calls to the optional threshold endpoint. No UI replacement.
 
-![Demo](plugins/dsh-quick-compact/docs/demo.gif)
+### Two forms
 
-### Where it lives
+**Ring form — in the composer toolbar**
 
-![Location](plugins/dsh-quick-compact/docs/location.gif)
+![The ring in the composer toolbar](plugins/dsh-quick-compact/docs/location.gif)
+
+DSH has a toolbar row under the composer (`+`, permissions, usage, model, mic, send). The ring sits on that row — right side of the composer, just left of the usage meter.
+
+**Panel form — click the ring**
+
+![Panel illustration: big ring, usage breakdown, one-click /compact](plugins/dsh-quick-compact/docs/panel.png)
+
+Click the ring and the panel opens: a big ring, `context used N%`, a three-part breakdown (system prompt / tool definitions / conversation), and a `/compact` row.
+
+### See it in action
+
+![Demo: open panel → one-click compact → fireworks](plugins/dsh-quick-compact/docs/demo.gif)
+
+This GIF is illustrative: the real fireworks are finer, run for about 2.2s on a full-page canvas, and play with or without the panel open.
 
 ### Features
 
 - **Ring gauge** — 18px ring + integer percentage from the host's `contextPressure` projection; fills as context grows and shifts lime → amber → red under pressure.
 - **Breakdown** — a popover with a big ring, `context used N%`, `≈ 148k / 1.0M`, and a three-part breakdown (system prompt / tool definitions / conversation) from `contextBreakdown`.
 - **One-click compact** — runs `remote.commands.execute(sessionId, '/compact', [])`, identical to typing the command yourself.
-- **Fireworks** — a 1.4s particle burst + shockwave drawn over the whole page on success, with or without the panel open (manual `/compact` or auto-compaction); `pointer-events:none`, disabled under `prefers-reduced-motion`.
+- **Fireworks** — a ~2.2s particle burst + shockwave drawn over the whole page; plays with or without the panel open, when the plugin's `/compact` call does not explicitly fail, and when measured context usage drops by ≥15 percentage points (auto-compaction usually does). `pointer-events:none`, disabled under `prefers-reduced-motion`.
 - **Zero-invasion** — the built-in meter stays untouched; the plugin renders in its own slot.
 
 ### Install

@@ -145,7 +145,7 @@ window.__ModuleLoader__.load({
       'border:2px solid var(--dsw-alias-brand-primary);box-shadow:0 1px 3px rgba(0,0,0,.28)}',
       '.qc-th__range:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;border-radius:6px}',
       '.qc-th__hint{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary))}',
-      // 压缩烟花：全屏 canvas 覆盖层，只在压缩发生那一刻出现 1.4 秒，不吃鼠标事件
+      // 压缩烟花：全屏 canvas 覆盖层，只在压缩发生那一刻出现约 2.2 秒，不吃鼠标事件
       '.qc-fw{position:fixed;left:0;top:0;z-index:2147483001;pointer-events:none;display:block}',
     ].join('');
 
@@ -231,7 +231,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    // ── 压缩烟花：从环心炸一簇粒子 + 一圈冲击波，1.4 秒散尽 ──────────────
+    // ── 压缩烟花：从环心炸一簇粒子 + 一圈冲击波，约 2.2 秒散尽 ──────────────
     // 刻意做成小方点而不是圆形光斑：方点更硬、更像工程图里的图元，
     // 与他定下的界面审美一致（冷白 + 硬边 + 克制），不要彩虹烟花那种甜腻感。
     const FW_DURATION = 2200;
