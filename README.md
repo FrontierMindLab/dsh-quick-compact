@@ -35,14 +35,14 @@ DSH 本来就有上下文环，但它只告诉你「用了多少」；想压缩�
 | **用量小环** | 18px 环 + 整数百分比，读宿主 `contextPressure` 投影（已用 ÷ 路由容量）。填充随用量增长，高压自动变色：青柠 → 橙 → 红。数据没出来时不显示假数字。 |
 | **用量构成** | 点开面板：大环 + `上下文已用 N%` + `≈ 148k / 1.0M`，下面是 `contextBreakdown` 给出的三段构成：系统提示 / 工具定义 / 对话内容，各自 token 数。 |
 | **一键压缩** | 面板里 `/compact 压缩上下文` 一行，点击调命令通道 `remote.commands.execute(sessionId, '/compact', [])`——和手打命令完全等价，不是自己实现的假压缩。失败会把宿主返回的错误原样显示。 |
-| **压缩烟花** | 压缩成功那一刻，环心炸开一簇小方点 + 一圈冲击波，1.4 秒散尽。全屏 canvas、`pointer-events:none`，不挡输入也不吃点击；`prefers-reduced-motion` 时不放。 |
+| **压缩烟花** | 压缩成功那一刻，环心炸开一簇小方点 + 一圈冲击波，1.4 秒散尽。它铺在**整个页面**上——不打开面板也会放；手动点 `/compact` 跟命令返回触发，自动压缩（阈值触发）也会放。`pointer-events:none` 不挡输入、不吃点击；`prefers-reduced-motion` 时不放。 |
 | **零侵入** | 官方那只环原样保留，插件只在自己的插槽里画；不接管官方 UI，升级不易碎。 |
 
 ### 界面
 
 ![面板：大环 + 用量构成 + /compact 行](plugins/dsh-quick-compact/docs/panel.png)
 
-| 压缩烟花（点 `/compact` 那一刻） |
+| 压缩烟花：不用打开面板，界面里直接放 |
 | --- |
 | ![压缩烟花](plugins/dsh-quick-compact/docs/fireworks.gif) |
 
@@ -118,7 +118,7 @@ A client-side plugin for DeepSeek Harness that adds a ring gauge next to the bui
 - **Ring gauge** — 18px ring + integer percentage from the host's `contextPressure` projection; fills as context grows and shifts lime → amber → red under pressure.
 - **Breakdown** — a popover with a big ring, `context used N%`, `≈ 148k / 1.0M`, and a three-part breakdown (system prompt / tool definitions / conversation) from `contextBreakdown`.
 - **One-click compact** — runs `remote.commands.execute(sessionId, '/compact', [])`, identical to typing the command yourself.
-- **Fireworks** — a 1.4s particle burst + shockwave on success, on a `pointer-events:none` overlay (disabled under `prefers-reduced-motion`).
+- **Fireworks** — a 1.4s particle burst + shockwave drawn over the whole page on success, with or without the panel open (manual `/compact` or auto-compaction); `pointer-events:none`, disabled under `prefers-reduced-motion`.
 - **Zero-invasion** — the built-in meter stays untouched; the plugin renders in its own slot.
 
 ### Install
