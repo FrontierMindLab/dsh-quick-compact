@@ -77,14 +77,6 @@ DSH 0.2.x（桌面版 / Web 版）。无需额外依赖，安装后即生效。
 - **自动压缩引擎**：DSH 官方的 `@deepseek-ai/dsh-compaction-basic`，本插件只是触发官方 `/compact` 命令，不实现压缩逻辑。
 - **可选联动**：安装了 [windwhiterain/dsh-compaction-threshold](https://github.com/windwhiterain/dsh-compaction-threshold)（MIT）时，面板里会多一条「压缩触发阈值」滑块，直接读写它的 `/compaction-threshold/api/state` 接口——**仅调用公开 HTTP 接口，未复制其代码**；未安装时该控件自动不显示，互不影响。
 
-### 路线
-
-- [x] 环 + 面板 + 一键压缩
-- [x] 压缩烟花
-- [x] 窄屏 / 深色主题适配
-- [ ] 压缩前后对比视图（压了什么、保留了什么）
-- [ ] 自动压缩阈值可视化（与 `dsh-compaction-threshold` 联动）
-
 ### 仓库里的其他东西
 
 - `experiments/` — 性能基准（`bench/`）、A/B 对比（`ab/`）、脱敏样例（`fixtures/`）、聚合结果（`results/`）
