@@ -97,6 +97,7 @@ window.__ModuleLoader__.load({
       '.qc-glyph{display:inline-flex;flex:none}',
       // 面板：沿用宿主菜单面板的表面/模糊/阴影令牌，跟原生弹层一致
       '.qc-panel{position:fixed;z-index:2147483000;width:' + PANEL_WIDTH + 'px;box-sizing:border-box;padding:12px;',
+      'max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;',
       'border:0;border-radius:var(--dsw-radius-lg,16px);background:var(--dsw-specific-menu,var(--dsw-alias-bg-overlay));',
       '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(40px) saturate(150%));',
       'backdrop-filter:var(--dsw-menu-backdrop-filter,blur(40px) saturate(150%));',
@@ -181,6 +182,37 @@ window.__ModuleLoader__.load({
         ? Math.min(100, Math.round((used / window) * 100))
         : null;
       return { used, window, percent };
+    }
+
+    // 面板定位：窗口变窄、缩放、宿主内嵌都算进视口里量，最后一定夹在屏幕内
+    const PANEL_MARGIN = 8;
+
+    function viewportBox() {
+      let w = typeof window !== 'undefined' ? window.innerWidth : 0;
+      let h = typeof window !== 'undefined' ? window.innerHeight : 0;
+      const de = typeof document !== 'undefined' ? document.documentElement : null;
+      if (de) {
+        if (de.clientWidth > 0) w = Math.min(w || de.clientWidth, de.clientWidth);
+        if (de.clientHeight > 0) h = Math.min(h || de.clientHeight, de.clientHeight);
+      }
+      return { w: w || 0, h: h || 0 };
+    }
+
+    /** 锚在小环上算面板位置；width/height 传面板实测尺寸，越界就往回夹。 */
+    function panelPos(rect, width, height) {
+      const vp = viewportBox();
+      const w = width > 0 ? width : PANEL_WIDTH;
+      const h = height > 0 ? height : 0;
+      let left = rect ? rect.right - w : vp.w - w - PANEL_MARGIN;
+      left = Math.max(PANEL_MARGIN, Math.min(left, vp.w - w - PANEL_MARGIN));
+      let bottom = rect ? vp.h - rect.top + PANEL_MARGIN : 96;
+      if (h > 0) bottom = Math.min(bottom, vp.h - h - PANEL_MARGIN);
+      bottom = Math.max(PANEL_MARGIN, bottom);
+      return { left: Math.round(left) + 'px', bottom: Math.round(bottom) + 'px' };
+    }
+
+    function samePos(a, b) {
+      return !!a && !!b && a.left === b.left && a.bottom === b.bottom;
     }
 
     function ringTint(percent) {
@@ -467,16 +499,36 @@ window.__ModuleLoader__.load({
         return function () { if (thTimer.current) window.clearTimeout(thTimer.current); };
       }, []);
 
+      // 打开后按面板实测尺寸再校一次，窗口变窄/缩放、面板自己长高时都跟着收回来。
+      // 只在点击那一刻算一次的话，窗口一变小面板右半边就挂到视口外被裁掉。
+      // 面板长高（阈值异步返回）时同理，会顶出屏幕上下沿。
+      React.useLayoutEffect(function () {
+        if (!open) return undefined;
+        function place() {
+          const el = panelRef.current;
+          const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null;
+          const next = panelPos(rect, el ? el.offsetWidth : 0, el ? el.offsetHeight : 0);
+          setPos(function (prev) { return samePos(prev, next) ? prev : next; });
+        }
+        place();
+        window.addEventListener('resize', place);
+        // 阈值是异步请求回来的，面板会在打开后突然长高；窗口没变 resize 不会触发，
+        // 长高的那截会顶出屏幕（上面或下面），所以尺寸一变就重算。
+        let ro = null;
+        if (typeof ResizeObserver === 'function' && panelRef.current) {
+          ro = new ResizeObserver(function () { place(); });
+          ro.observe(panelRef.current);
+        }
+        return function () {
+          window.removeEventListener('resize', place);
+          if (ro) ro.disconnect();
+        };
+      }, [open]);
+
       if (!sessionId) return null;
 
       function openPanel() {
-        const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null;
-        if (rect) {
-          const left = Math.max(8, Math.min(rect.right - PANEL_WIDTH, window.innerWidth - PANEL_WIDTH - 12));
-          setPos({ left: Math.round(left) + 'px', bottom: Math.round(window.innerHeight - rect.top + 8) + 'px' });
-        } else {
-          setPos({ right: '16px', bottom: '96px' });
-        }
+        setPos(panelPos(btnRef.current ? btnRef.current.getBoundingClientRect() : null));
         setMsg(null);
         setErr(false);
         setOpen(true);
@@ -630,6 +682,7 @@ window.__ModuleLoader__.load({
           max: th.max,
           step: 0.01,
           value: th.ratio,
+          disabled: th.engines === 0,
           'aria-label': t('thLabel'),
           style: { '--qc-fill': (Math.max(0, Math.min(1, (th.ratio - th.min) / ((th.max - th.min) || 1))) * 100).toFixed(1) + '%' },
           onChange: onThresholdInput,
