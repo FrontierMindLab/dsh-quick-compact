@@ -25,7 +25,7 @@ window.__ModuleLoader__.load({
       close: '关闭',
       thLabel: '自动压缩阈值',
       thHint: '占用到 {percent}% 时自动压缩',
-      thOff: '阈值控制未就绪（压缩引擎未挂载，重启后生效）',
+      thOff: '阈值控制不可用（没有找到可调的压缩引擎）',
     };
     const EN = {
       compact: 'Compact',
@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
       close: 'Close',
       thLabel: 'Auto-compact at',
       thHint: 'Compacts automatically at {percent}% of context',
-      thOff: 'Threshold control unavailable (no compaction engine mounted)',
+      thOff: 'Threshold control unavailable (no adjustable compaction engine found)',
     };
 
     // 宿主命令通道（remote.commands.execute(sessionId, '/compact', [])），与手打 /compact 等价
@@ -670,7 +670,8 @@ window.__ModuleLoader__.load({
         })
       ) : null;
 
-      const threshold = th === null ? null : h('div', { className: 'qc-th' },
+      const thresholdReady = !!th && th.engines > 0;
+      const threshold = th === null ? null : (thresholdReady ? h('div', { className: 'qc-th' },
         h('div', { className: 'qc-th__head' },
           h('span', { className: 'qc-th__label' }, t('thLabel')),
           h('span', { className: 'qc-th__value' }, Math.round(th.ratio * 100) + '%')
@@ -682,15 +683,12 @@ window.__ModuleLoader__.load({
           max: th.max,
           step: 0.01,
           value: th.ratio,
-          disabled: th.engines === 0,
           'aria-label': t('thLabel'),
           style: { '--qc-fill': (Math.max(0, Math.min(1, (th.ratio - th.min) / ((th.max - th.min) || 1))) * 100).toFixed(1) + '%' },
           onChange: onThresholdInput,
         }),
-        h('span', { className: 'qc-th__hint' }, th.engines > 0
-          ? t('thHint', { percent: Math.round(th.ratio * 100) })
-          : t('thOff'))
-      );
+        h('span', { className: 'qc-th__hint' }, t('thHint', { percent: Math.round(th.ratio * 100) }))
+      ) : h('div', { className: 'qc-th' }, h('span', { className: 'qc-th__hint' }, t('thOff'))));
 
       const action = h('button', {
         type: 'button',
