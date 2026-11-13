@@ -25,7 +25,7 @@ window.__ModuleLoader__.load({
       close: '关闭',
       thLabel: '自动压缩阈值',
       thHint: '占用到 {percent}% 时自动压缩',
-      thOff: '阈值控制未就绪（压缩引擎未挂载，重启后生效）',
+      thOff: '阈值控制不可用（没有找到可调的压缩引擎）',
     };
     const EN = {
       compact: 'Compact',
@@ -46,7 +46,7 @@ window.__ModuleLoader__.load({
       close: 'Close',
       thLabel: 'Auto-compact at',
       thHint: 'Compacts automatically at {percent}% of context',
-      thOff: 'Threshold control unavailable (no compaction engine mounted)',
+      thOff: 'Threshold control unavailable (no adjustable compaction engine found)',
     };
 
     // 宿主命令通道（remote.commands.execute(sessionId, '/compact', [])），与手打 /compact 等价
@@ -96,7 +96,7 @@ window.__ModuleLoader__.load({
       '.qc-fill{fill:none;stroke-linecap:round;transition:stroke-dasharray .45s cubic-bezier(.22,.61,.36,1),stroke .2s ease}',
       '.qc-glyph{display:inline-flex;flex:none}',
       // 面板：沿用宿主菜单面板的表面/模糊/阴影令牌，跟原生弹层一致
-      '.qc-panel{position:fixed;z-index:2147483000;width:' + PANEL_WIDTH + 'px;box-sizing:border-box;padding:12px;',
+      '.qc-panel{position:fixed;left:0;top:0;right:auto;bottom:auto;margin:0;z-index:2147483000;width:' + PANEL_WIDTH + 'px;box-sizing:border-box;padding:12px;',
       'max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;',
       'border:0;border-radius:var(--dsw-radius-lg,16px);background:var(--dsw-specific-menu,var(--dsw-alias-bg-overlay));',
       '-webkit-backdrop-filter:var(--dsw-menu-backdrop-filter,blur(40px) saturate(150%));',
@@ -184,9 +184,15 @@ window.__ModuleLoader__.load({
       return { used, window, percent };
     }
 
-    // 面板定位：窗口变窄、缩放、宿主内嵌都算进视口里量，最后一定夹在屏幕内
+    // 面板定位：全部按「屏幕上看到的坐标」（getBoundingClientRect 那一套）算，最后一定夹在屏幕内。
+    // 2026-11-13 修三件事：
+    //  1. 面板进浏览器顶层（popover），不再被输入框外层裁掉、盖住，也不被外层的 transform 带偏；
+    //  2. 界面被 CSS zoom 缩放时，写进样式的 px 会再被放大一次，按实测比例 scale 换算回去；
+    //  3. 小环挪了位置（输入框变高、侧栏开合）而窗口大小没变时，面板也要跟着走。
     const PANEL_MARGIN = 8;
 
+    /** 屏幕可视区大小（屏幕 px）。CSS zoom 下 innerWidth 和 documentElement.clientWidth
+     *  都已经是屏幕 px，不能再乘缩放比例（乘了会在缩小时把可视区算小，面板被夹到左上方）。 */
     function viewportBox() {
       let w = typeof window !== 'undefined' ? window.innerWidth : 0;
       let h = typeof window !== 'undefined' ? window.innerHeight : 0;
@@ -198,21 +204,45 @@ window.__ModuleLoader__.load({
       return { w: w || 0, h: h || 0 };
     }
 
-    /** 锚在小环上算面板位置；width/height 传面板实测尺寸，越界就往回夹。 */
-    function panelPos(rect, width, height) {
+    /** 锚在小环上方、右边对齐，算面板左上角。rect、width、height 都是屏幕坐标。
+     *  scale = 屏幕 px ÷ 样式 px（没缩放时是 1）。
+     *  返回 left/top 是屏幕坐标；x/y、maxW/maxH 是换算后写进样式的值。
+     *  面板比可视区还大时挪位置救不了，所以同时给出尺寸上限，超出的部分在面板里滚动。 */
+    function panelPos(rect, width, height, scale) {
+      const k = scale > 0 ? scale : 1;
       const vp = viewportBox();
-      const w = width > 0 ? width : PANEL_WIDTH;
-      const h = height > 0 ? height : 0;
+      const roomW = Math.max(0, vp.w - PANEL_MARGIN * 2);
+      const roomH = Math.max(0, vp.h - PANEL_MARGIN * 2);
+      const w = Math.min(width > 0 ? width : PANEL_WIDTH * k, roomW);
+      const h = Math.min(height > 0 ? height : 0, roomH);
       let left = rect ? rect.right - w : vp.w - w - PANEL_MARGIN;
       left = Math.max(PANEL_MARGIN, Math.min(left, vp.w - w - PANEL_MARGIN));
-      let bottom = rect ? vp.h - rect.top + PANEL_MARGIN : 96;
-      if (h > 0) bottom = Math.min(bottom, vp.h - h - PANEL_MARGIN);
-      bottom = Math.max(PANEL_MARGIN, bottom);
-      return { left: Math.round(left) + 'px', bottom: Math.round(bottom) + 'px' };
+      let top = rect ? rect.top - PANEL_MARGIN - h : vp.h - 96 - h;
+      top = Math.min(top, vp.h - h - PANEL_MARGIN);
+      top = Math.max(PANEL_MARGIN, top);
+      return {
+        left: left, top: top,
+        // 留两位小数：缩放时取整到整数 px 会让面板和小环差一两个屏幕 px
+        x: Math.round(left / k * 100) / 100, y: Math.round(top / k * 100) / 100,
+        maxW: Math.floor(roomW / k), maxH: Math.floor(roomH / k),
+      };
     }
 
     function samePos(a, b) {
-      return !!a && !!b && a.left === b.left && a.bottom === b.bottom;
+      return !!a && !!b && a.x === b.x && a.y === b.y && a.maxW === b.maxW && a.maxH === b.maxH;
+    }
+
+    /** 实测缩放比例：面板在屏幕上的宽 ÷ 样式里的宽。量不出来就当没缩放。 */
+    function measureScale(el) {
+      try {
+        const cssWidth = parseFloat(window.getComputedStyle(el).width);
+        const seen = el.getBoundingClientRect().width;
+        if (cssWidth > 0 && seen > 0) {
+          const k = seen / cssWidth;
+          if (k > 0.2 && k < 5) return k;
+        }
+      } catch (_) {}
+      return 1;
     }
 
     function ringTint(percent) {
@@ -499,36 +529,53 @@ window.__ModuleLoader__.load({
         return function () { if (thTimer.current) window.clearTimeout(thTimer.current); };
       }, []);
 
-      // 打开后按面板实测尺寸再校一次，窗口变窄/缩放、面板自己长高时都跟着收回来。
-      // 只在点击那一刻算一次的话，窗口一变小面板右半边就挂到视口外被裁掉。
-      // 面板长高（阈值异步返回）时同理，会顶出屏幕上下沿。
+      // 打开后：进顶层、按实测尺寸定位，然后每一帧看小环位置、面板尺寸、窗口大小有没有变，
+      // 变了就重算。只听 resize 的话，输入框变高或侧栏开合时面板会留在原地（漂移）。
       React.useLayoutEffect(function () {
         if (!open) return undefined;
+        const el = panelRef.current;
+        if (el && typeof el.showPopover === 'function') {
+          // 顶层元素不受外层 overflow / 层叠 / transform 影响；manual = 关闭仍由本组件自己管
+          try { el.setAttribute('popover', 'manual'); el.showPopover(); }
+          catch (_) { try { el.removeAttribute('popover'); } catch (__) {} }
+        }
         function place() {
-          const el = panelRef.current;
+          const panel = panelRef.current;
+          if (!panel) return;
           const rect = btnRef.current ? btnRef.current.getBoundingClientRect() : null;
-          const next = panelPos(rect, el ? el.offsetWidth : 0, el ? el.offsetHeight : 0);
+          const box = panel.getBoundingClientRect();
+          const next = panelPos(rect, box.width, box.height, measureScale(panel));
           setPos(function (prev) { return samePos(prev, next) ? prev : next; });
         }
         place();
-        window.addEventListener('resize', place);
-        // 阈值是异步请求回来的，面板会在打开后突然长高；窗口没变 resize 不会触发，
-        // 长高的那截会顶出屏幕（上面或下面），所以尺寸一变就重算。
-        let ro = null;
-        if (typeof ResizeObserver === 'function' && panelRef.current) {
-          ro = new ResizeObserver(function () { place(); });
-          ro.observe(panelRef.current);
+        let raf = 0;
+        let last = '';
+        function tick() {
+          const panel = panelRef.current;
+          const btn = btnRef.current;
+          // 小环或面板不在页面上了（会话没了、工具栏收起）：没有可锚的地方，关掉并停止逐帧检查
+          if (!panel || !btn) { setOpen(false); return; }
+          const a = btn.getBoundingClientRect();
+          if (a.width === 0 && a.height === 0) { setOpen(false); return; }
+          raf = window.requestAnimationFrame(tick);
+          const b = panel.getBoundingClientRect();
+          const key = [a.left, a.top, a.right, b.width, b.height, window.innerWidth, window.innerHeight]
+            .map(Math.round).join(',');
+          if (key !== last) { last = key; place(); }
         }
-        return function () {
-          window.removeEventListener('resize', place);
-          if (ro) ro.disconnect();
-        };
+        raf = window.requestAnimationFrame(tick);
+        return function () { window.cancelAnimationFrame(raf); };
       }, [open]);
+
+      // 换了会话或会话没了：旧面板不留着，否则回来时它不会重新进顶层
+      React.useEffect(function () {
+        setOpen(false);
+      }, [sessionId]);
 
       if (!sessionId) return null;
 
       function openPanel() {
-        setPos(panelPos(btnRef.current ? btnRef.current.getBoundingClientRect() : null));
+        setPos(null); // 位置等面板进了页面、量到尺寸再定，之前先不显示
         setMsg(null);
         setErr(false);
         setOpen(true);
@@ -670,7 +717,8 @@ window.__ModuleLoader__.load({
         })
       ) : null;
 
-      const threshold = th === null ? null : h('div', { className: 'qc-th' },
+      const thresholdReady = !!th && th.engines > 0;
+      const threshold = th === null ? null : (thresholdReady ? h('div', { className: 'qc-th' },
         h('div', { className: 'qc-th__head' },
           h('span', { className: 'qc-th__label' }, t('thLabel')),
           h('span', { className: 'qc-th__value' }, Math.round(th.ratio * 100) + '%')
@@ -682,15 +730,12 @@ window.__ModuleLoader__.load({
           max: th.max,
           step: 0.01,
           value: th.ratio,
-          disabled: th.engines === 0,
           'aria-label': t('thLabel'),
           style: { '--qc-fill': (Math.max(0, Math.min(1, (th.ratio - th.min) / ((th.max - th.min) || 1))) * 100).toFixed(1) + '%' },
           onChange: onThresholdInput,
         }),
-        h('span', { className: 'qc-th__hint' }, th.engines > 0
-          ? t('thHint', { percent: Math.round(th.ratio * 100) })
-          : t('thOff'))
-      );
+        h('span', { className: 'qc-th__hint' }, t('thHint', { percent: Math.round(th.ratio * 100) }))
+      ) : h('div', { className: 'qc-th' }, h('span', { className: 'qc-th__hint' }, t('thOff'))));
 
       const action = h('button', {
         type: 'button',
@@ -708,7 +753,9 @@ window.__ModuleLoader__.load({
         role: 'dialog',
         'aria-label': t('title'),
         className: 'qc-panel',
-        style: pos || { right: '16px', bottom: '96px' },
+        style: pos
+          ? { transform: 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)', maxWidth: pos.maxW + 'px', maxHeight: pos.maxH + 'px' }
+          : { visibility: 'hidden' },
       },
         head,
         bar,

@@ -1,6 +1,6 @@
 {
   "name": "dsh-quick-compact",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": false,
   "description": "Compact gauge for DeepSeek Harness: an 18px ring + tabular percentage in the composer toolbar that opens a usage breakdown and runs /compact.",
   "type": "module",
