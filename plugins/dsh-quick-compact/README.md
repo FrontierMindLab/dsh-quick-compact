@@ -7,25 +7,25 @@
 **小环形态：输入框工具栏里的一枚小环**
 
 <p align="center">
-  <img src="docs/location.gif" alt="小环在输入框工具栏里的位置" width="720">
+  <img src="https://raw.githubusercontent.com/FrontierMindLab/dsh-quick-compact/main/plugins/dsh-quick-compact/docs/location.gif" alt="小环在输入框工具栏里的位置" width="720">
 </p>
 
 **卡片形态：点开就是面板**
 
 <p align="center">
-  <img src="docs/panel.png" alt="面板示意：大环 + 用量构成 + /compact 行" width="720">
+  <img src="https://raw.githubusercontent.com/FrontierMindLab/dsh-quick-compact/main/plugins/dsh-quick-compact/docs/panel.png" alt="面板示意：大环 + 用量构成 + /compact 行" width="720">
 </p>
 
 **点一下的样子**
 
 <p align="center">
-  <img src="docs/demo.gif" alt="演示：点开面板 → 一键压缩 → 压缩烟花" width="720">
+  <img src="https://raw.githubusercontent.com/FrontierMindLab/dsh-quick-compact/main/plugins/dsh-quick-compact/docs/demo.gif" alt="演示：点开面板 → 一键压缩 → 压缩烟花" width="720">
 </p>
 
 GIF 是示意：插件里的压缩烟花更细腻，动画约 2.2 秒，而且是整页放，不打开面板也会放。
 
 <p align="center">
-  <img src="docs/fireworks.gif" alt="压缩成功后的烟花" width="720">
+  <img src="https://raw.githubusercontent.com/FrontierMindLab/dsh-quick-compact/main/plugins/dsh-quick-compact/docs/fireworks.gif" alt="压缩成功后的烟花" width="720">
 </p>
 
 ## 中文

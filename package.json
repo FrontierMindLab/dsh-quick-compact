@@ -1,0 +1,7 @@
+{
+  "name": "dsh-quick-compact-repo",
+  "private": true,
+  "workspaces": [
+    "plugins/*"
+  ]
+}
